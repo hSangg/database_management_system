@@ -125,6 +125,7 @@ END;
 -------------------- TH 3--------------------------
 -------------------- TH3.4-------------------------
 
+
 DECLARE
     CURSOR Y IS
         SELECT
@@ -159,6 +160,7 @@ BEGIN
         OPEN X(COURSE_ID);
         LOOP
             FETCH X INTO CLASS_ID, COURSE_ID, COUNT_STUDENT;
+            exit when x%NOTFOUND;
             SELECT
                 COURSE.DESCRIPTION INTO COURSE_NAME
             FROM
@@ -168,7 +170,9 @@ BEGIN
             DBMS_OUTPUT.PUT_LINE(COURSE_NAME
                 ||COURSE_ID );
         END LOOP;
+        close x;
     END LOOP;
+    close y;
 END;
 -------------------- TH3.5-------------------------
 CREATE OR REPLACE PROCEDURE find_sname (
