@@ -9,3 +9,12 @@ BEGIN
     RAISE_APPLICATION_ERROR(-20000,'Ngay ban hang phai sau ngay vao lam cua nhan vien');
     END IF;
 END;
+
+
+/*
++--------+------+-----+-----+
+|  B?ng  | Thêm | Xóa | S?a |
++--------+------+-----+-----+
+| HOADON | +    |   - | +   |
++--------+------+-----+-----+
+*/
