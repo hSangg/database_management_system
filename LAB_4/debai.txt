@@ -1,0 +1,11 @@
+Sử dụng CSDL Quản lý bán hàng (tập tin đính kèm trên hệ thống), xây dựng
+các câu trigger sau:
+1) Ngày mua hàng (NGHD) của một khách hàng thành viên sẽ lớn hơn hoặc
+bằng ngày khách hàng đó đăng ký thành viên (NGDK).
+2) Ngày bán hàng (NGHD) của một nhân viên phải lớn hơn hoặc bằng ngày
+nhân viên đó vào làm.
+3) Mỗi một hóa đơn phải có ít nhất một chi tiết hóa đơn.
+4) Trị giá của một hóa đơn là tổng thành tiền (số lượng*đơn giá) của các chi
+tiết thuộc hóa đơn đó.
+5) Doanh số của một khách hàng là tổng trị giá các hóa đơn mà khách hàng
+thành viên đó đã mua.
