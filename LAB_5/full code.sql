@@ -1,4 +1,4 @@
---4.1
+Ôªø--4.1
 CREATE OR REPLACE PROCEDURE sp_ThongTinDocGia (p_ma_docgia IN NUMBER) IS
   v_count_nguoilon NUMBER;
   v_count_treem NUMBER;
@@ -85,9 +85,9 @@ BEGIN
         FETCH cur_DocGiaNguoiLonDangMuon INTO docgia_info;
         EXIT WHEN cur_DocGiaNguoiLonDangMuon%NOTFOUND;
 
-        DBMS_OUTPUT.PUT_LINE('M„ ??c gi?: ' || docgia_info.ma_DocGia);
-        DBMS_OUTPUT.PUT_LINE('H? v‡ tÍn: ' || docgia_info.ho || ' ' || docgia_info.tenlot || ' ' || docgia_info.ten);
-        DBMS_OUTPUT.PUT_LINE('Ng‡y sinh: ' || TO_CHAR(docgia_info.ngaysinh));
+        DBMS_OUTPUT.PUT_LINE('M√£ ??c gi?: ' || docgia_info.ma_DocGia);
+        DBMS_OUTPUT.PUT_LINE('H? v√† t√™n: ' || docgia_info.ho || ' ' || docgia_info.tenlot || ' ' || docgia_info.ten);
+        DBMS_OUTPUT.PUT_LINE('Ng√†y sinh: ' || TO_CHAR(docgia_info.ngaysinh));
         DBMS_OUTPUT.PUT_LINE('--------------------------------------');
     END LOOP;
 
@@ -116,9 +116,9 @@ BEGIN
         FETCH cur_DocGiaNguoiLonDangMuon INTO docgia_info;
         EXIT WHEN cur_DocGiaNguoiLonDangMuon%NOTFOUND;
 
-        DBMS_OUTPUT.PUT_LINE('M„ ??c gi?: ' || docgia_info.ma_DocGia);
-        DBMS_OUTPUT.PUT_LINE('H? v‡ tÍn: ' || docgia_info.ho || ' ' || docgia_info.tenlot || ' ' || docgia_info.ten);
-        DBMS_OUTPUT.PUT_LINE('Ng‡y sinh: ' || TO_CHAR(docgia_info.ngaysinh));
+        DBMS_OUTPUT.PUT_LINE('M√£ ??c gi?: ' || docgia_info.ma_DocGia);
+        DBMS_OUTPUT.PUT_LINE('H? v√† t√™n: ' || docgia_info.ho || ' ' || docgia_info.tenlot || ' ' || docgia_info.ten);
+        DBMS_OUTPUT.PUT_LINE('Ng√†y sinh: ' || TO_CHAR(docgia_info.ngaysinh));
         DBMS_OUTPUT.PUT_LINE('--------------------------------------');
     END LOOP;
 
@@ -212,7 +212,7 @@ BEGIN
     WHERE p_ma_docgia = ma_docgia;
     
     IF v_exists_muon > 0 THEN
-      DBMS_OUTPUT.PUT_LINE('KhÙng th? xÛa ??c gi? ???c.');
+      DBMS_OUTPUT.PUT_LINE('Kh√¥ng th? x√≥a ??c gi? ???c.');
     ELSE
       SELECT COUNT(*) INTO v_exists_nguoilon
       FROM nguoilon nl
@@ -247,11 +247,89 @@ BEGIN
       END IF;
     END IF;
   ELSE
-    DBMS_OUTPUT.PUT_LINE('KhÙng t?n t?i ??c gi?.');
+    DBMS_OUTPUT.PUT_LINE('Kh√¥ng t?n t?i ??c gi?.');
   END IF;
 END;
 
+--4.6
 
+CREATE OR REPLACE PROCEDURE sp_CapNhatTrangThaiDauSach (
+  isbn IN NUMBER
+) AS
+  soluong NUMBER;
+BEGIN
+  SELECT COUNT(*) INTO soluong
+  FROM dausach ds, cuonsach cs, tuasach ts
+  WHERE ds.isbn = sp_CapNhatTrangThaiDauSach.isbn
+  AND ds.ma_tuasach = ts.ma_tuasach
+  AND ds.isbn = cs.isbn
+  AND cs.tinhtrang = 'Y';
+  
+  IF soluong = 0 THEN
+    UPDATE Dausach
+    SET trangthai = 'N'
+    WHERE isbn = sp_CapNhatTrangThaiDauSach.isbn;
+  ELSE
+    UPDATE Dausach
+    SET trangthai = 'Y'
+    WHERE isbn = sp_CapNhatTrangThaiDauSach.isbn;
+  END IF;
+END;
+/
+
+--4.13
+CREATE OR REPLACE PROCEDURE sp_TraSach (
+  isbn IN NUMBER,
+  ma_cuonsach IN NUMBER,
+  ma_docgia IN NUMBER
+) AS
+  ngayGio_muon smalldatetime;
+  ngay_hethan smalldatetime;
+  ngayGio_tra smalldatetime;
+  tien_muon NUMBER;
+  tien_datra NUMBER;
+  tien_datcoc NUMBER;
+  ghichu VARCHAR2(255);
+  ngay_quahan NUMBER;
+  tien_phat NUMBER;
+BEGIN
+  SELECT ngayGio_muon, ngay_hethan
+  INTO ngayGio_muon, ngay_hethan
+  FROM Muon
+  WHERE isbn = sp_TraSach.isbn
+  AND ma_cuonsach = sp_TraSach.ma_cuonsach
+  AND ma_docgia = sp_TraSach.ma_docgia;
+  
+  tien_muon := 0;
+  ngayGio_tra := SYSDATE;
+
+  ngay_quahan := ngay_hethan - ngayGio_tra;
+
+  IF ngay_quahan > 0 THEN
+    tien_phat := 1000 * ngay_quahan;
+  END IF;
+  
+  tien_muon := tien_muon + tien_phat;
+  
+  -- Them vao bang qua trinh muon
+  INSERT INTO QuaTrinhMuon
+  VALUES (isbn, ma_cuonsach, ngayGio_muon, ma_docgia, ngay_hethan, ngayGio_tra, tien_muon, tien_datra, tien_datcoc, ghichu);
+  
+  -- Xoa du lieu trong bang muon
+  DELETE FROM Muon
+  WHERE isbn = sp_TraSach.isbn
+  AND ma_cuonsach = sp_TraSach.ma_cuonsach
+  AND ma_docgia = sp_TraSach.ma_docgia;
+
+  UPDATE CuonSach
+  SET TinhTrang = 'N'
+  WHERE isbn = sp_TraSach.isbn
+  AND Ma_CuonSach = sp_TraSach.ma_cuonsach;
+  
+  -- Th·ª±c thi stored procedure sp_CapNhatTrangThaiDauSach
+  EXEC sp_CapNhatTrangThaiDauSach(isbn);
+END;
+/
 
 --Trigger 1
 CREATE OR REPLACE TRIGGER tg_delMuon 
@@ -300,7 +378,7 @@ FOR EACH ROW
     SELECT ma_tuasach INTO ma_tuasach_var
     FROM DAUSACH
     WHERE DAUSACH.isbn = :NEW.isbn;
-    -- C?p nh?t tr?ng th·i c?a ??u s·ch d?a trÍn tÏnh tr?ng cu?n s·ch m?i
+    -- C?p nh?t tr?ng th√°i c?a ??u s√°ch d?a tr√™n t√¨nh tr?ng cu?n s√°ch m?i
     UPDATE DAUSACH
     SET trangthai = :NEW.tinhtrang
     WHERE DAUSACH.ma_tuasach = ma_tuasach_var;
